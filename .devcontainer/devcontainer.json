@@ -1,0 +1,36 @@
+{
+    "name": "EIA Data Automation",
+    "image": "rkrispin/data-pipeline-automation-with-github-actions:prod",
+    "customizations": {
+        "settings": {
+            "python.defaultInterpreterPath": "/opt/LINKEDIN_LEARNING/bin/python3",
+            "python.selectInterpreter": "/opt/LINKEDIN_LEARNING/bin/python3"
+        },
+        "vscode": {
+            "extensions": [
+                // R Extensions
+                "rdebugger.r-debugger",
+                "reditorsupport.r",
+                "REditorSupport.r",
+                "REditorSupport.r-lsp",
+                "RDebugger.r-debugger",
+                // Documentation Extensions
+                "quarto.quarto",
+                "purocean.drawio-preview",
+                "redhat.vscode-yaml",
+                "yzhang.markdown-all-in-one",
+                // Docker Supporting Extensions
+                "ms-azuretools.vscode-docker",
+                "ms-vscode-remote.remote-containers",
+                // Python Extensions
+                "ms-python.python",
+                "ms-toolsai.jupyter",
+                // Github Actions
+                "github.vscode-github-actions"
+            ]
+        }
+    },
+    "remoteEnv": {
+        "EIA_API_KEY": "${localEnv:EIA_API_KEY}"
+    }
+}
