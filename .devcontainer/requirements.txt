@@ -1,0 +1,11 @@
+wheel
+radian
+pandas
+numpy
+gensim
+ipykernel
+requests
+plotly
+ipywidgets
+jupyter
+great_tables
