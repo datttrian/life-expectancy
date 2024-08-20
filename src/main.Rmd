@@ -1,3 +1,14 @@
+---
+output:
+  md_document:
+    variant: gfm
+---
+
+# Life Expectancy
+
+## Get Life Table
+
+```{r, message=F}
 library(tidyverse)
 library(rvest)
 library(glue)
@@ -35,3 +46,4 @@ life_tables <- map(countries, get_life_table) %>%
 
 life_tables %>%
   glimpse
+```
