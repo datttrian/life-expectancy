@@ -436,8 +436,6 @@ life_tables_gapminder %>%
          life_expectancy = sum(kpx)) %>%
   filter(Age == 0) %>%
   ungroup %>%
-  group_by(Year, Gender) %>%
-  arrange(desc(life_expectancy)) %>%
   ggplot(aes(
     x = gdpPercap,
     y = life_expectancy,
@@ -475,15 +473,15 @@ life_expectancy_range <- life_expectancy_data %>%
   summarize(life_expectancy_range = max(life_expectancy) - min(life_expectancy)) %>%
   ungroup
 
-# Select the top 1 country per continent based on life expectancy range
-top_countries <- life_expectancy_range %>%
+# Select top 1 country per continent based on life expectancy range
+top_le <- life_expectancy_range %>%
   group_by(continent, Gender) %>%
   top_n(1, wt = life_expectancy_range) %>%
   ungroup
 
 # Filter the original data to include only the selected countries
 lt_top_le <- life_expectancy_data %>%
-  semi_join(top_countries, by = c("Country", "continent", "Gender"))
+  semi_join(top_le, by = c("Country", "continent", "Gender"))
 
 # Plot the results
 lt_top_le %>%
@@ -520,21 +518,31 @@ lt_top_le %>%
 
 
 ``` r
-# Calculate the range of GDP per capita
-life_expectancy_range <- life_tables_gapminder %>%
-  group_by(continent, Country) %>%
-  summarize(gdpPercap_range = max(gdpPercap, na.rm = TRUE) - min(gdpPercap, na.rm = TRUE)) %>%
+# Calculate life expectancy for each country, gender, and year
+life_expectancy <- life_tables_gapminder %>%
+  group_by(Year, Country) %>%
+  mutate(kpx = cumprod(1 - qx),
+         life_expectancy = sum(kpx)) %>%
+  filter(Age == 0) %>%
   ungroup
 
-# Select the top 2 countries per continent based on GDP per capita range
-top_countries <- life_expectancy_range %>%
+# Calculate the range of GDP for each country
+gdp_range <- life_tables_gapminder %>%
+  group_by(continent, Country) %>%
+  summarize(
+    gdpPercap_range = max(gdpPercap, na.rm = TRUE) - min(gdpPercap, na.rm = TRUE)
+  ) %>%
+  ungroup
+
+# Select top 2 countries based on GDP per capita range
+top_gdp <- gdp_range %>%
   group_by(continent) %>%
   top_n(2, wt = gdpPercap_range) %>%
   ungroup
 
 # Filter the original data to include only the selected countries
-lt_top_gdp <- life_expectancy_data %>%
-  semi_join(top_countries, by = c("Country", "continent"))
+lt_top_gdp <- life_expectancy %>%
+  semi_join(top_gdp, by = c("Country", "continent"))
 
 # Plot the results
 lt_top_gdp %>%
@@ -553,11 +561,7 @@ lt_top_gdp %>%
   ggtitle("Life Expectancy and Top GDP per Capita by Continent, Population, and Year") +
   xlab("GDP per Capita") + ylab("Life Expectancy") +
   labs(color = "Continent", size = "Population") +
-  theme(axis.text.x = element_text(
-    angle = 90,
-    vjust = 0.5,
-    hjust = 1
-  ))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
 ![](index_files/figure-html/unnamed-chunk-19-1.svg)<!-- -->
