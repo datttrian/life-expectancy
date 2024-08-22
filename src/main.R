@@ -355,7 +355,7 @@ lt_top_le %>%
 
 ### Life Expectancy and Top GDP per Capita by Continent, Population, and Year
 
-# Calculate life expectancy for each country, gender, and year
+# Calculate life expectancy for each country, and year
 life_expectancy <- life_tables_gapminder %>%
   group_by(Year, Country) %>%
   mutate(kpx = cumprod(1 - qx),
