@@ -1,6 +1,11 @@
+# Life Expectancy
+
+## Get Life Tables
+
 library(tidyverse)
 library(rvest)
 library(glue)
+library(tools)
 
 webpage <- "https://www.mortality.org/" %>%
   read_html %>%
@@ -30,8 +35,327 @@ get_life_table <- function(country) {
 
 life_tables <- map(countries, get_life_table) %>%
   bind_rows %>%
-  mutate(Age = as.numeric(Age)) %>%
+  mutate(Age = as.numeric(str_replace(Age, "110\\+", "110"))) %>%
   filter_all(all_vars(!is.na(.)))
 
 life_tables %>%
   glimpse
+
+## Visualize data for the U.S.A.
+
+usa_2019 <- life_tables %>%
+  filter(Country == "U.S.A.", Year == 2019)
+
+usa_2019 %>%
+  glimpse
+
+usa <- life_tables %>%
+  filter(Country == "U.S.A.")
+
+usa %>%
+  glimpse
+
+### Mortality Rate
+
+usa_2019 %>%
+  ggplot(aes(x = Age, y = qx, group = 1)) +
+  geom_line(col = "blue") +
+  labs(x = "Age",
+       y = expression(paste("Mortality Rate")),
+       title = "Mortality Rate and Age by Gender (U.S.A., 2019)") +
+  facet_wrap(~ toTitleCase(Gender))
+
+usa %>% ggplot(aes(x = Age, y = qx, color = Year)) +
+  geom_line(aes(group = Year)) +
+  labs(x = "Age",
+       y = expression(paste("Mortality Rate")),
+       title = "Mortality Rate and Age by Year and Gender (U.S.A., 1933-2021)") +
+  facet_wrap(~ toTitleCase(Gender))
+
+usa_2019 %>% ggplot(aes(x = Age, y = log(qx), group = 1)) +
+  geom_line(col = "blue") +
+  labs(x = "Age",
+       y = expression(paste("Log Mortality Rate")),
+       title = "Log Mortality Rate and Age by Gender (U.S.A., 2019)") +
+  facet_wrap(~ toTitleCase(Gender))
+
+usa = life_tables %>%
+  filter(Country == "U.S.A.")
+
+usa %>%
+  ggplot(aes(x = Age, y = log(qx), color = Year)) +
+  geom_line(aes(group = Year)) +
+  labs(x = "Age",
+       y = "Log Mortality Rate",
+       title = "Log Mortality Rate and Age by Year and Gender (U.S.A., 1933-2021)") +
+  facet_wrap(~ toTitleCase(Gender))
+
+### Survival Probability
+
+usa_2019 %>% filter(Age >= 18) %>%
+  group_by(Gender) %>%
+  mutate(survival = cumprod(1 - qx),
+         k = 0:(n() - 1)) %>%
+  ungroup() %>% ggplot(aes(x = k, y = survival)) +
+  geom_line(col = "blue") +
+  labs(x = "Future Lifetime",
+       y = expression("Survival Probability"),
+       title = "Survival Probability and Future Lifetime for People at Age 18 (U.S.A., 2019)") +
+  facet_wrap(~ toTitleCase(Gender))
+
+usa %>%
+  filter(Age >= 18) %>%
+  group_by(Gender, Year) %>%
+  mutate(survival = cumprod(1 - qx), k = 0:(n() - 1)) %>%
+  ungroup() %>%
+  ggplot(aes(x = k, y = survival, color = Year)) +
+  geom_line(aes(group = Year)) +
+  labs(x = "Future Lifetime",
+       y = expression("Survival Probability"),
+       title = "Survival Probability and Future Lifetime by Year and Gender for People at Age 18 (U.S.A., 1933-2021)") +
+  facet_wrap(~ toTitleCase(Gender))
+
+### Future Lifetime
+
+usa_2019 %>%
+  group_by(Gender) %>%
+  arrange(Age) %>%
+  mutate(
+    px = 1 - qx,
+    kpx = cumprod(px),
+    future_lifetime = rev(cumsum(rev(kpx)))
+  ) %>% ggplot(aes(x = Age, y = future_lifetime)) +
+  geom_line(col = "blue") +
+  labs(title = "Future Lifetime and Age by Gender (U.S.A., 2019)",
+       x = "Age",
+       y = "Future Lifetime") +
+  theme_minimal() +
+  facet_wrap(~ toTitleCase(Gender))
+
+usa %>%
+  group_by(Gender, Year) %>%
+  arrange(Age) %>%
+  mutate(
+    px = 1 - qx,
+    kpx = cumprod(px),
+    future_lifetime = rev(cumsum(rev(kpx)))
+  ) %>%
+  ungroup() %>%
+  ggplot(aes(x = Age, y = future_lifetime, color = Year)) +
+  geom_line(aes(group = Year)) +
+  labs(title = "Future Lifetime and Age by Year (U.S.A., 2019)",
+       x = "Age",
+       y = "Future Lifetime") +
+  theme_minimal() +
+  facet_wrap(~ toTitleCase(Gender))
+
+### Life Expectancy
+
+usa %>%
+  group_by(Gender, Year) %>%
+  mutate(kpx = cumprod(1 - qx),
+         life_expectancy = sum(kpx)) %>%
+  filter(Age == 0) %>% ggplot(aes(x = Year, y = life_expectancy, color = Gender)) +
+  geom_line() +
+  scale_color_discrete(name = "Gender", labels = c("Female", "Male")) +
+  labs(x = "Year",
+       y = "Life Expectancy",
+       title = "Life Expectancy and Year by Gender (U.S.A.)")
+
+## Visualize data
+
+life_tables %>%
+  group_by(Year, Country, Gender) %>%
+  mutate(kpx = cumprod(1 - qx),
+         life_expectancy = sum(kpx)) %>%
+  filter(Age == 0) %>%
+  ungroup() %>%
+  ggplot(aes(x = Year, y = life_expectancy, color = Country)) +
+  geom_point() +
+  facet_wrap( ~ toTitleCase(Gender)) +
+  ggtitle("Life Expectancy and Year by Country and Gender") +
+  xlab("Year") + ylab("Life Expectancy")
+
+life_tables %>%
+  group_by(Gender, Year) %>%
+  mutate(kpx = cumprod(1 - qx),
+         life_expectancy = sum(kpx)) %>%
+  filter(Age == 0) %>%
+  ggplot(aes(x = Year, y = life_expectancy, color = Gender)) +
+  geom_line() +
+  scale_color_discrete(name = "Gender", labels = c("Female", "Male")) +
+  facet_wrap(~ Country) +
+  ggtitle("Life Expectancy and Year by Gender and Country") +
+  xlab("Year") + ylab("Life Expectancy")
+
+### Gapminder
+
+library(gapminder)
+
+gapminder_modified <- gapminder %>%
+  mutate(
+    country = case_when(
+      country == "United States" ~ "U.S.A.",
+      country == "Hong Kong, China" ~ "Hong Kong",
+      country == "Korea, Rep." ~ "Republic of Korea",
+      country == "United Kingdom" ~ "U.K.",
+      country == "Slovak Republic" ~ "Slovakia",
+      TRUE ~ country
+    )
+  )
+
+life_tables_gapminder = life_tables %>%
+  filter(
+    # Filter mutual countries of the tables
+    Country %in% c(
+      "Australia",
+      "Austria",
+      "Belgium",
+      "Bulgaria",
+      "Canada",
+      "Chile",
+      "Croatia",
+      "Denmark",
+      "Finland",
+      "France",
+      "Germany",
+      "Greece",
+      "Hong Kong",
+      "Hungary",
+      "Iceland",
+      "Ireland",
+      "Israel",
+      "Italy",
+      "Japan",
+      "Netherlands",
+      "New Zealand",
+      "Norway",
+      "Poland",
+      "Portugal",
+      "Republic of Korea",
+      "Slovenia",
+      "Spain",
+      "Sweden",
+      "Switzerland",
+      "Taiwan",
+      "U.K.",
+      "U.S.A."
+    )
+  ) %>%
+  inner_join(gapminder_modified, by = c("Year" = "year", "Country" = "country"))
+
+library(dplyr)
+library(ggplot2)
+
+# Calculate life expectancy for each country, gender, and year
+life_expectancy_data <- life_tables_gapminder %>%
+  group_by(Year, Country, Gender) %>%
+  mutate(kpx = cumprod(1 - qx),
+         life_expectancy = sum(kpx)) %>%
+  filter(Age == 0) %>%
+  ungroup()
+
+# Calculate the range of life expectancy for each country
+life_expectancy_range <- life_expectancy_data %>%
+  group_by(continent, Country, Gender) %>%
+  summarize(life_expectancy_range = max(life_expectancy) - min(life_expectancy)) %>%
+  ungroup()
+
+# Select the top 4 countries per continent based on life expectancy range
+top_countries <- life_expectancy_range %>%
+  group_by(continent, Gender) %>%
+  top_n(2, wt = life_expectancy_range) %>%
+  ungroup()
+
+# Filter the original data to include only the selected countries
+filtered_data <- life_expectancy_data %>%
+  semi_join(top_countries, by = c("Country", "continent", "Gender"))
+
+# Plot the results
+filtered_data %>%
+  ggplot(aes(x = Year, y = life_expectancy, color = continent)) +
+  geom_point() +
+  facet_wrap(~ toTitleCase(Gender)) +
+  geom_text(aes(label = Country),
+            hjust = 1,
+            vjust = 2,
+            size = 2) +
+  ggtitle("Life Expectancy and Year by Continent and Gender") +
+  xlab("Year") + ylab("Life Expectancy") +
+  labs(color = "Continent")
+
+life_tables_gapminder %>%
+  filter(Year == 2007) %>%
+  group_by(Year, Country, Gender) %>%
+  mutate(kpx = cumprod(1 - qx),
+         life_expectancy = sum(kpx)) %>%
+  filter(Age == 0) %>%
+  ungroup() %>%
+  group_by(Year, Gender) %>%
+  arrange(desc(life_expectancy)) %>%
+  ggplot(aes(
+    x = gdpPercap,
+    y = life_expectancy,
+    color = continent,
+    size = pop
+  )) +
+  geom_point() +
+  facet_wrap(~ toTitleCase(Gender)) +
+  geom_text(aes(label = Country),
+            hjust = 1,
+            vjust = 1,
+            size = 2) +
+  ggtitle("Life Expectancy and GDP per Capita by Continent, Population, and Gender in 2007") +
+  xlab("GDP per Capita") + ylab("Life Expectancy") +
+  labs(color = "Continent", size = "Population")
+
+library(dplyr)
+library(ggplot2)
+
+# Calculate life expectancy for each country, gender, and year
+life_expectancy_data <- life_tables_gapminder %>%
+  group_by(Year, Country) %>%
+  mutate(
+    Age = replace_na(Age, 110),
+    kpx = cumprod(1 - qx),
+    life_expectancy = sum(kpx)
+  ) %>%
+  filter(Age == 0) %>%
+  ungroup()
+
+# Calculate the range of life expectancy for each country
+life_expectancy_range <- life_expectancy_data %>%
+  group_by(continent, Country) %>%
+  summarize(
+    life_expectancy_range = max(life_expectancy) - min(life_expectancy),
+    gdpPercap_range = max(gdpPercap, na.rm = TRUE) - min(gdpPercap, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Select the top 4 countries per continent based on life expectancy range or GDP per capita range
+top_countries <- life_expectancy_range %>%
+  group_by(continent) %>%
+  top_n(4, wt = life_expectancy_range + gdpPercap_range) %>%
+  ungroup()
+
+# Filter the original data to include only the selected countries
+filtered_data <- life_expectancy_data %>%
+  semi_join(top_countries, by = c("Country", "continent"))
+
+# Plot the results
+filtered_data %>%
+  ggplot(aes(
+    x = gdpPercap,
+    y = life_expectancy,
+    color = continent,
+    size = pop
+  )) +
+  geom_point() +
+  facet_wrap(~ Year) +
+  geom_text(aes(label = Country),
+            hjust = 1,
+            vjust = 1,
+            size = 2) +
+  ggtitle("Life Expectancy and GDP per Capita by Continent, Population, and Year") +
+  xlab("GDP per Capita") + ylab("Life Expectancy") +
+  labs(color = "Continent", size = "Population")
