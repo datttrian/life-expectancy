@@ -67,7 +67,7 @@ usa %>%
   glimpse
 ```
 
-### Mortality Rate
+### Mortality Rate and Age by Gender (U.S.A., 2019)
 
 ```{r}
 usa_2019 %>%
@@ -79,6 +79,8 @@ usa_2019 %>%
   facet_wrap(~ toTitleCase(Gender))
 ```
 
+### Mortality Rate and Age by Year and Gender (U.S.A., 1933-2021)
+
 ```{r}
 usa %>% ggplot(aes(x = Age, y = qx, color = Year)) +
   geom_line(aes(group = Year)) +
@@ -88,6 +90,8 @@ usa %>% ggplot(aes(x = Age, y = qx, color = Year)) +
   facet_wrap(~ toTitleCase(Gender))
 ```
 
+### Log Mortality Rate and Age by Gender (U.S.A., 2019)
+
 ```{r}
 usa_2019 %>% ggplot(aes(x = Age, y = log(qx), group = 1)) +
   geom_line(col = "blue") +
@@ -96,6 +100,8 @@ usa_2019 %>% ggplot(aes(x = Age, y = log(qx), group = 1)) +
        title = "Log Mortality Rate and Age by Gender (U.S.A., 2019)") +
   facet_wrap(~ toTitleCase(Gender))
 ```
+
+### Log Mortality Rate and Age by Year and Gender (U.S.A., 1933-2021)
 
 ```{r}
 usa = life_tables %>%
@@ -110,7 +116,7 @@ usa %>%
   facet_wrap(~ toTitleCase(Gender))
 ```
 
-### Survival Probability
+### Survival Probability and Future Lifetime for People at Age 18 (U.S.A., 2019)
 
 ```{r}
 usa_2019 %>% filter(Age >= 18) %>%
@@ -124,6 +130,8 @@ usa_2019 %>% filter(Age >= 18) %>%
        title = "Survival Probability and Future Lifetime for People at Age 18 (U.S.A., 2019)") +
   facet_wrap(~ toTitleCase(Gender))
 ```
+
+### Survival Probability and Future Lifetime by Year and Gender for People at Age 18 (U.S.A., 1933-2021)
 
 ```{r}
 usa %>%
@@ -139,7 +147,7 @@ usa %>%
   facet_wrap(~ toTitleCase(Gender))
 ```
 
-### Future Lifetime
+### Future Lifetime and Age by Gender (U.S.A., 2019)
 
 ```{r}
 usa_2019 %>%
@@ -157,6 +165,8 @@ usa_2019 %>%
   theme_minimal() +
   facet_wrap(~ toTitleCase(Gender))
 ```
+
+### Future Lifetime and Age by Year (U.S.A., 2019)
 
 ```{r}
 usa %>%
@@ -179,7 +189,7 @@ usa %>%
   facet_wrap(~ toTitleCase(Gender))
 ```
 
-### Life Expectancy
+### Life Expectancy and Year by Gender (U.S.A.)
 
 ```{r}
 usa %>%
@@ -196,6 +206,8 @@ usa %>%
 
 ## Visualize data
 
+### Life Expectancy and Year by Country and Gender
+
 ```{r}
 life_tables %>%
   group_by(Year, Country, Gender) %>%
@@ -209,6 +221,8 @@ life_tables %>%
   ggtitle("Life Expectancy and Year by Country and Gender") +
   xlab("Year") + ylab("Life Expectancy")
 ```
+
+### Life Expectancy and Year by Gender and Country
 
 ```{r}
 life_tables %>%
@@ -224,7 +238,7 @@ life_tables %>%
   xlab("Year") + ylab("Life Expectancy")
 ```
 
-### Gapminder
+## Visualize data with Gapminder
 
 ```{r}
 library(gapminder)
@@ -282,6 +296,8 @@ life_tables_gapminder = life_tables %>%
 inner_join(gapminder_modified, by = c("Year" = "year", "Country" = "country"))
 ```
 
+### Life Expectancy and Year by Continent and Gender
+
 ```{r}
 library(dplyr)
 library(ggplot2)
@@ -324,6 +340,8 @@ filtered_data %>%
   labs(color = "Continent")
 ```
 
+### Life Expectancy and GDP per Capita by Continent, Population, and Gender in 2007
+
 ```{r}
 life_tables_gapminder %>%
   filter(Year == 2007) %>%
@@ -350,6 +368,8 @@ life_tables_gapminder %>%
   xlab("GDP per Capita") + ylab("Life Expectancy") +
   labs(color = "Continent", size = "Population")
 ```
+
+### Life Expectancy and GDP per Capita by Continent, Population, and Year
 
 ```{r}
 library(dplyr)
