@@ -1,4 +1,4 @@
-# Life Expectancy
+# Life Expectancy - 2021/12/31
 
 ## Get Life Tables
 
@@ -80,7 +80,7 @@ life_tables %>%
     ## $ Country <chr> "Australia", "Australia", "Australia", "Australia", "Australia…
     ## $ Gender  <chr> "female", "female", "female", "female", "female", "female", "f…
 
-## Visualize data for the U.S.A.
+## Visualize Data for the U.S.A.
 
 ``` r
 usa_2019 <- life_tables %>%
@@ -286,7 +286,7 @@ usa %>%
 
 ![](README_files/figure-gfm/unnamed-chunk-12-1.svg)<!-- -->
 
-## Visualize data
+## Visualize Data
 
 ### Life Expectancy and Year by Country and Gender
 
@@ -326,7 +326,7 @@ life_tables %>%
 
 ![](README_files/figure-gfm/unnamed-chunk-14-1.svg)<!-- -->
 
-## Visualize data with Gapminder
+## Visualize Data with Gapminder
 
 ``` r
 library(gapminder)
@@ -401,7 +401,7 @@ life_expectancy_range <- life_expectancy_data %>%
   summarize(life_expectancy_range = max(life_expectancy) - min(life_expectancy)) %>%
   ungroup
 
-# Select the top 4 countries per continent based on life expectancy range
+# Select the top 2 countries per continent based on life expectancy range
 top_countries <- life_expectancy_range %>%
   group_by(continent, Gender) %>%
   top_n(2, wt = life_expectancy_range) %>%
@@ -480,10 +480,10 @@ life_expectancy_range <- life_expectancy_data %>%
   ) %>%
   ungroup
 
-# Select the top 4 countries per continent based on life expectancy range or GDP per capita range
+# Select the top 2 countries per continent based on life expectancy range or GDP per capita range
 top_countries <- life_expectancy_range %>%
   group_by(continent) %>%
-  top_n(4, wt = life_expectancy_range + gdpPercap_range) %>%
+  top_n(2, wt = life_expectancy_range + gdpPercap_range) %>%
   ungroup
 
 # Filter the original data to include only the selected countries
